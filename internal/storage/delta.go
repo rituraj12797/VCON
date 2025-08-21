@@ -1,0 +1,7 @@
+
+
+package storage
+
+func delta() {
+	
+}
