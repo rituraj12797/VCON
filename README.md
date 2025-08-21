@@ -1,3 +1,3 @@
  # VCON
 
-a simple file version controll system
+a simple file version control system
