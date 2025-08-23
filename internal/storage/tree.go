@@ -1,14 +1,20 @@
 package storage
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/emirpasic/gods/maps/treemap"
+)
 
 type Tree struct {
-	tree []Node
+	tree       []Node
+	versionMap *treemap.Map // version vs node number
 }
 
 func NewTree() *Tree { // returns a reference to a new tree
 	var newtre Tree
 	newtre.tree = append(newtre.tree, Node{}) // empty node this will be the 0th node we are doing 1 based indexing so root will be 1st index hence starter is 0th node to avoid any confusion
+	newtre.versionMap = treemap.NewWithStringComparator()
 	return &newtre
 }
 
@@ -26,7 +32,6 @@ func (t *Tree) AddNode(parentNode int, nodeNumber int, nodeVersion string, child
 
 	if parentNode >= len(t.tree) || parentNode < 0 { // parent node =0 means first node is being aded so thats cmpletely fine
 		return fmt.Errorf(" invalid parent ")
-
 	}
 
 	// verify the size of tree it must be = nodenumber
@@ -42,6 +47,8 @@ func (t *Tree) AddNode(parentNode int, nodeNumber int, nodeVersion string, child
 		}
 	}
 
+	t.versionMap.Put(nodeVersion, nodeNumber) // this version corrosponds to this node number
+
 	t.tree = append(t.tree, Node{}) // add a empty child and then modify values for the child
 
 	parent := &t.tree[parentNode]
@@ -53,7 +60,7 @@ func (t *Tree) AddNode(parentNode int, nodeNumber int, nodeVersion string, child
 		version: nodeVersion,
 
 		lastSnapshotAncestor: func() int {
-			if childDepth%10 == 0 {
+			if childDepth%10 == 0 || nodeNumber == 1 {
 				return nodeNumber
 			}
 			return parent.lastSnapshotAncestor
@@ -62,7 +69,7 @@ func (t *Tree) AddNode(parentNode int, nodeNumber int, nodeVersion string, child
 		depth: childDepth,
 
 		nodeType: func() DataType {
-			if childDepth%10 == 0 {
+			if childDepth%10 == 0 || nodeNumber == 1 {
 				return Snapshot
 			}
 			return Delta
@@ -85,6 +92,52 @@ func (t *Tree) AddNode(parentNode int, nodeNumber int, nodeVersion string, child
 	fmt.Println("========================= ")
 
 	return nil
+}
+
+func (t *Tree) GetVersionX(version string) {
+	// this will return a interface type data
+
+	// main logic revolves around doing a dfs from ancestor to child
+
+	// now finding this path from ancestor to child will be dificult as number of child could be > 1 so high number of paths how to find the one whihc connects ancestor snapshto ndoe to this one ??
+
+	// answer => from child traverse it's parent if parent = LSA good else go to it's parent
+	// this way we will find the path from chiild to ancestor correclty without exploring much ( finding path in constant time )
+
+	// for now this function will pritn the path from the LSA to this version
+
+	// checks
+	targetNodenumber, found := t.versionMap.Get(version)
+
+	if !found {
+		fmt.Println(" version not found ")
+		return
+	}
+
+	// if exists means it is valid
+	nodeNum := targetNodenumber.(int) // since the map is of type interface {} vs interface {} type convert before using thi value
+	lsa := t.tree[nodeNum].lastSnapshotAncestor
+
+	curNode := nodeNum
+	// path must have both lsa and curNode
+
+	var path []int
+	path = append(path, nodeNum)
+
+	for j := curNode; j != lsa; {
+		path = append(path, t.tree[j].parentNumber)
+		j = t.tree[j].parentNumber
+	}
+
+	fmt.Println(" nodeNum : ", nodeNum)
+	fmt.Println(" lsa : ", lsa)
+
+	fmt.Println(" path : ", path)
+	fmt.Println("=============")
+
+	// if path length = 1 means this node it self is the LSA
+	// if path length > 1 means someone else ( one etreme is lsa and other exreme is the nodeNum )
+
 }
 
 func (t *Tree) ShowTree() {
