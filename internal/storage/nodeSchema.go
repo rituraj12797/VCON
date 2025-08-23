@@ -9,9 +9,10 @@ const (
 
 type Node struct {
 	number int;  // the node number
-	version int;  // the version this node corrsponds to 
+	version string;  // the version this node corrsponds to 
 	lastSnapshotAncestor int; // ths last ancestor which was a snapshot node 
 
+	depth int; // depth from root
 	nodeType DataType; // snapshot or delta node
 	data interface{}; // holding the actual data which the node will store diffs or snapshot
 
