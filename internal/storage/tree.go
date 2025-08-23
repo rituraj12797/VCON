@@ -54,13 +54,15 @@ func (t *Tree) AddNode(parentNode int, nodeNumber int, nodeVersion string, child
 	parent := &t.tree[parentNode]
 	childDepth := parent.depth + 1
 
+	thresholdDepth := 3
+
 	childNode := Node{
 
 		number:  nodeNumber,
 		version: nodeVersion,
 
 		lastSnapshotAncestor: func() int {
-			if childDepth%10 == 0 || nodeNumber == 1 {
+			if childDepth%thresholdDepth == 0 || nodeNumber == 1 {
 				return nodeNumber
 			}
 			return parent.lastSnapshotAncestor
@@ -69,7 +71,7 @@ func (t *Tree) AddNode(parentNode int, nodeNumber int, nodeVersion string, child
 		depth: childDepth,
 
 		nodeType: func() DataType {
-			if childDepth%10 == 0 || nodeNumber == 1 {
+			if childDepth%thresholdDepth == 0 || nodeNumber == 1 {
 				return Snapshot
 			}
 			return Delta
@@ -134,6 +136,19 @@ func (t *Tree) GetVersionX(version string) {
 
 	fmt.Println(" path : ", path)
 	fmt.Println("=============")
+
+	// path reversal 
+	for i, j := 0, len(path)-1; i < j; i, j = i+1, j-1 {
+    path[i], path[j] = path[j], path[i]
+}
+
+	var data string;
+	
+	for j := 0; j< len(path); j++ {
+		data += t.tree[path[j]].data.(string)
+	}
+	
+	fmt.Println(" The Data is : ",data);
 
 	// if path length = 1 means this node it self is the LSA
 	// if path length > 1 means someone else ( one etreme is lsa and other exreme is the nodeNum )
