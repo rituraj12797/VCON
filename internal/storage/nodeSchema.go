@@ -9,7 +9,7 @@ const (
 
 type Node struct {
 	number int;  // the node number
-	version float32;  // the version this node corrsponds to 
+	version int;  // the version this node corrsponds to 
 	lastSnapshotAncestor int; // ths last ancestor which was a snapshot node 
 
 	nodeType DataType; // snapshot or delta node
