@@ -1,5 +1,8 @@
  # VCon: A High-Performance, Real-Time Version Control Engine
 
+
+![WhatsApp Image 2025-08-27 at 02 45 52_e26be7e0](https://github.com/user-attachments/assets/fd2bd7b5-c3dc-4811-9e83-a02a6fef0255)
+
 ## Table of Contents
 1.  **Introduction: Rethinking Version Control**
     *   1.1. The Core Problem: The Access-Time Bottleneck
