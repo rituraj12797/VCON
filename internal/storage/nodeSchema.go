@@ -16,6 +16,9 @@ type Node struct {
 	nodeType DataType; // snapshot or delta node
 	data interface{}; // holding the actual data which the node will store diffs or snapshot
 
+	// snapshots will be array of identifiers 
+	// deltas will be object data containing infor about change 
+
 	parentNumber int;
 	childNodes []int;
 }
