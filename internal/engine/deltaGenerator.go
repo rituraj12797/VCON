@@ -6,60 +6,8 @@ package engine
 // generate the smallest set of opeation needed to be done on file X to convert it to X + 1 th file
 
 // return this set of operation
-type DeltaType string
-
-const (
-	A DeltaType = "A"
-	D DeltaType = "D"
-)
-
-type DeltaInstruction struct {
-	DeltaType DeltaType
-	Line      int // the line of parrent array which wil be affected by it
-	Val       int // identifier of data being added or removed
-}
 
 func GenerateDelta(versionX1, versionX2, lcs *[]int) []DeltaInstruction {
-	// var delta []DeltaInstruction
-	// idxA := 0   // Pointer for parent
-	// idxB := 0   // Pointer for child
-	// idxLCS := 0 // Pointer for LCS
-
-	// for idxA < len(parent) || idxB < len(child) {
-	// 	isLCSExhausted := idxLCS >= len(lcs)
-
-	// 	// Case 1: If parent is exhausted, all remaining child items are additions.
-	// 	if idxA >= len(parent) {
-	// 		delta = append(delta, DeltaInstruction{AddAction, len(parent), child[idxB]})
-	// 		idxB++
-	// 		continue
-	// 	}
-
-	// 	// Case 2: If child is exhausted, all remaining parent items are deletions.
-	// 	if idxB >= len(child) {
-	// 		delta = append(delta, DeltaInstruction{DeleteAction, idxA, parent[idxA]})
-	// 		idxA++
-	// 		continue
-	// 	}
-
-	// 	// Case 3: If the items match and are part of the LCS, it's a common line.
-	// 	if !isLCSExhausted && parent[idxA] == lcs[idxLCS] && child[idxB] == lcs[idxLCS] {
-	// 		idxA++
-	// 		idxB++
-	// 		idxLCS++
-	// 		continue
-	// 	}
-
-	// 	// Case 4: If parent item is not in LCS, it's a deletion.
-	// 	if isLCSExhausted || parent[idxA] != lcs[idxLCS] {
-	// 		delta = append(delta, DeltaInstruction{DeleteAction, idxA, parent[idxA]})
-	// 		idxA++
-
-	// 	} else if isLCSExhausted || child[idxB] != lcs[idxLCS] {
-	// 		delta = append(delta, DeltaInstruction{AddAction, idxA, child[idxB]})
-	// 		idxB++
-	// 	}
-	// }
 
 	var delta []DeltaInstruction
 	idx1 := 0

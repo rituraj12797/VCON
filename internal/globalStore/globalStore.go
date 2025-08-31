@@ -18,6 +18,9 @@ type Store struct {
 	mutex                   sync.RWMutex
 }
 
+// Global store defined here 
+var GlobalStore *Store
+
 func InitializeStore() *Store {
 	x := Store{
 		stringToIdentifier:      *treemap.NewWithStringComparator(),
@@ -27,6 +30,10 @@ func InitializeStore() *Store {
 	}
 
 	return &x
+}
+
+func Initialize() {
+	GlobalStore = InitializeStore()
 }
 
 func (t *Store) Intern(statement string) (int, error) {
