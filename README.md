@@ -206,6 +206,26 @@ To make the engine usable, it needs an interface.
 *   **REST API:** Expose endpoints like `GET /versions/{name}` and `POST /versions`.
 *   **CLI:** Create a simple command-line tool for basic operations: `vcon add`, `vcon get`, `vcon show-tree`.
 
+### 5.6. Lazy Loading for Large-Scale Systems
+
+For a production system with millions of versions, loading the entire version tree into RAM is not feasible. The current "load-everything" model must be replaced with a **lazy-loading architecture** to handle enterprise-scale repositories.
+
+*   **The Challenge:** A version tree with millions of nodes could consume gigabytes or terabytes of memory, making it impossible to load entirely on application startup.
+
+*   **The Architecture:** The system would be redesigned to treat the database as the ultimate source of truth and main memory as a small, fast cache for recently used nodes.
+    1.  **Database:** The `version_nodes` table, indexed by `version_id`, holds the complete history.
+    2.  **In-Memory Node Cache:** A `map[int]*Node` in the `Tree` struct holds a "hot" subset of nodes that have been recently accessed. This cache would have a fixed size limit and use an eviction policy like LRU (Least Recently Used).
+    3.  **Access Logic:** A central `GetNode(id)` function becomes the sole gatekeeper for accessing nodes.
+
+*   **The Workflow (`GetVersionX`):**
+    1.  A request for a version triggers a call to `GetNode(target_id)`.
+    2.  The `GetNode` function first checks the in-memory cache. If the node is present (a **cache hit**), it's returned instantly.
+    3.  If the node is not in the cache (a **cache miss**), the function queries the database for that single node (`SELECT * FROM version_nodes WHERE version_id = ?`).
+    4.  The node is loaded from the database, placed into the in-memory cache, and then returned.
+    5.  The reconstruction logic then follows the `parent_id` of the newly loaded node, triggering another `GetNode` call. This process repeats, walking up the chain one node at a time until the LSA is reached.
+
+*   **The Benefit:** This architecture ensures that only the small, linear path of nodes required for a single `GetVersionX` operation is ever loaded into memory. The other millions of nodes remain on disk, consuming zero RAM. This approach is highly scalable and is the standard for handling massive-scale version histories in systems like Git. 
+
 ## 6. Conclusion
 
 This project successfully demonstrates that it is possible to build a version control engine that offers **predictable, real-time access to any version in history**, a critical requirement for a new generation of applications. By rethinking the core data structure and introducing the **Last Snapshot Ancestor (LSA)** algorithm, VCon decouples retrieval time from the size and age of the version history.
