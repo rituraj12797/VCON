@@ -60,9 +60,9 @@ func (t *Store) Intern(statement string) (int, error) {
 		return id.(int), nil
 	}
 
-	t.nextAvailableIdentifier = t.nextAvailableIdentifier + 1
 	t.stringToIdentifier.Put(statement, t.nextAvailableIdentifier)
 	t.identifierToString.Put(t.nextAvailableIdentifier, statement)
+	t.nextAvailableIdentifier = t.nextAvailableIdentifier + 1
 
 	return t.nextAvailableIdentifier, nil
 }
