@@ -17,7 +17,7 @@ func ApplyDelta(parent []int, delta []DeltaInstruction) []int {
 	}
 
 	for j := range delta {
-		if delta[j].DeltaType == "A" {
+		if delta[j].DeltaType == 1 { // 1 means add 
 			line := delta[j].Line
 			vec, found := addMap.Get(line)
 			var arr []int

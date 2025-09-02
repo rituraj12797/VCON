@@ -1,10 +1,10 @@
 package engine
 
-type DeltaType string
+type DeltaType int
 
 const (
-	A DeltaType = "A"
-	D DeltaType = "D"
+	A DeltaType = 1
+	D DeltaType = 0
 )
 
 type DeltaInstruction struct {

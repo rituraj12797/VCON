@@ -20,7 +20,7 @@ func GenerateDelta(versionX1, versionX2, lcs *[]int) []DeltaInstruction {
 
 		if idx1 < len((*versionX1)) && idxLCS == len((*lcs)) {
 			delta = append(delta, DeltaInstruction{
-				DeltaType: "D",
+				DeltaType: 0, // 0 means delete
 				Line:      idx1,
 				Val:       0, // 0 just measa garbage value never use it to identify a string
 			})
@@ -28,7 +28,7 @@ func GenerateDelta(versionX1, versionX2, lcs *[]int) []DeltaInstruction {
 		} else if idx2 < len((*versionX2)) && idxLCS == len((*lcs)) {
 			// verxionX2 remaining
 			delta = append(delta, DeltaInstruction{
-				DeltaType: "A",
+				DeltaType: 1, // 1 means Add
 				Line:      idx1,
 				Val:       (*versionX2)[idx2],
 			})
@@ -49,14 +49,14 @@ func GenerateDelta(versionX1, versionX2, lcs *[]int) []DeltaInstruction {
 
 				if (*versionX2)[idx2] != (*lcs)[idxLCS] {
 					delta = append(delta, DeltaInstruction{
-						DeltaType: "A",
+						DeltaType: 1, // add means 1
 						Line:      idx1,
 						Val:       (*versionX2)[idx2],
 					})
 					idx2++
 				} else if (*versionX1)[idx1] != (*lcs)[idxLCS] {
 					delta = append(delta, DeltaInstruction{
-						DeltaType: "D",
+						DeltaType: 0, // Delete means 0
 						Line:      idx1,
 						Val:       0,
 					})
