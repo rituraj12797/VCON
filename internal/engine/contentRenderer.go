@@ -8,18 +8,13 @@ import (
 
 // this will convert the identifier list into readable content
 
-type PairRange struct {
-	start int
-	end   int
-}
-
 func ContentRendered(contentNumArray *[]int) {
 
 	size := len(*contentNumArray)
 
 	resultArray := make([]string, size)
 
-	// fmt.Println(" Received array : ", contentNumArray)
+	fmt.Println(" Received array : ", contentNumArray)
 	// use GetStringFromIdentifier for getting string from identifier
 	gStore := globalStore.GlobalStore
 
@@ -36,7 +31,7 @@ func ContentRendered(contentNumArray *[]int) {
 			resultArray[i] = stringForThisIdentifier // stored sequentially order maintained dueto iteration
 		}
 	}
-
+	
 	/*
 
 
@@ -165,18 +160,18 @@ func ContentRendered(contentNumArray *[]int) {
 	*/
 
 	duration := time.Since(startTime) // Calculate duration
-
+	
 	// 5. Print the result
 	fmt.Printf("\n--- Benchmark Complete ---\n")
 
 	// print the result now
 	fmt.Println(" =========== COPMILED RESULT ========== ")
 
-	// for x, y := range resultArray {
-	// 	fmt.Println(x, " :  ", y)
-	// }
+	for x, y := range resultArray {
+		fmt.Println(x, " :  ", y)
+	}
 
 	fmt.Println(" ====================================== ")
-	fmt.Printf("ContentRendered took %v micro seconds to process %d lines.\n", duration.Microseconds(), size)
+	fmt.Printf("ContentRenderer took %v micro seconds to process %d lines.\n", duration.Microseconds(), size)
 
 }

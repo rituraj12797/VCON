@@ -14,11 +14,11 @@ type Store struct {
 	stringToIdentifier treemap.Map
 	identifierToString treemap.Map
 
-	nextAvailableIdentifier int
+	nextAvailableIdentifier int // same as the next usable node 
 	mutex                   sync.RWMutex
 }
 
-// Global store defined here 
+// Global store defined here
 var GlobalStore *Store
 
 func InitializeStore() *Store {
@@ -64,7 +64,7 @@ func (t *Store) Intern(statement string) (int, error) {
 	t.identifierToString.Put(t.nextAvailableIdentifier, statement)
 	t.nextAvailableIdentifier = t.nextAvailableIdentifier + 1
 
-	return t.nextAvailableIdentifier, nil
+	return t.nextAvailableIdentifier - 1, nil
 }
 
 func (t *Store) GetStringFromIdentifier(identifier int) (string, error) {

@@ -7,6 +7,7 @@ import "fmt"
 
 // 							LCS = dmallest identifier subsequence common in both
 
+/* CONVERT THIS TO ITERATIVE DP FOR AVOIDING STACK MEMORY EXPLOSION IN LARGER DOCUMENTS */
 func recursion(ind1 int, ind2 int, arr *[]int, brr *[]int, dp *[][]int) int {
 
 	// prune base case
@@ -24,7 +25,8 @@ func recursion(ind1 int, ind2 int, arr *[]int, brr *[]int, dp *[][]int) int {
 	var ans int = 0
 
 	if (*arr)[ind1] == (*brr)[ind2] {
-		ans = max(1+recursion(ind1+1, ind2+1, arr, brr, dp), max(recursion(ind1+1, ind2, arr, brr, dp), recursion(ind1, ind2+1, arr, brr, dp)))
+
+		ans = 1 + recursion(ind1+1, ind2+1, arr, brr, dp)
 	} else {
 		ans = max(recursion(ind1+1, ind2, arr, brr, dp), recursion(ind1, ind2+1, arr, brr, dp))
 	}
@@ -43,18 +45,8 @@ func lcsGenerator(ind1 int, ind2 int, arr *[]int, brr *[]int, dp *[][]int, resul
 
 	if (*arr)[ind1] == (*brr)[ind2] {
 		// ans = max(1+recursion(ind1+1,ind2+1,arr,brr,dp), max(recursion(ind1+1,ind2,arr,brr,dp),recursion(ind1,ind2+1,arr,brr,dp)));      coule be one of the 3 values
-
-		if val == 1+recursion(ind1+1, ind2+1, arr, brr, dp) {
-			(*result) = append((*result), (*arr)[ind1])
-			lcsGenerator(ind1+1, ind2+1, arr, brr, dp, result)
-		} else {
-			if val == recursion(ind1+1, ind2, arr, brr, dp) {
-				lcsGenerator(ind1+1, ind2, arr, brr, dp, result)
-			} else {
-				lcsGenerator(ind1, ind2+1, arr, brr, dp, result)
-			}
-		}
-
+		(*result) = append((*result), (*arr)[ind1])
+		lcsGenerator(ind1+1, ind2+1, arr, brr, dp, result)
 	} else {
 		if val == recursion(ind1+1, ind2, arr, brr, dp) {
 			lcsGenerator(ind1+1, ind2, arr, brr, dp, result)
