@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"vcon/internal/api"
 	"vcon/internal/db"
+	"vcon/internal/repository"
 )
 
 func main() {
@@ -13,8 +15,21 @@ func main() {
 	api.DemoHandler()
 
 	fmt.Println(" trying to conenct to DB ")
-	db.DBConnect()	
+
+	database,err := db.DBConnect()	
 	
+	if err != nil {
+		panic(err)
+	}
+
+	x := repository.NewDocumentRepository(database)
+
+	arr := []string{"a","b","c"};
+
+	x.CreateDocument(context.Background(),"new_doc",arr)
+	
+
+
  	// 	x := storage.NewTree()
 	
  	// 	// for now we define global variable in their files thwmselvs only
@@ -113,5 +128,9 @@ func main() {
 	
  	// 	// Pass the document through the content renderer
  	// 	engine.ContentRendered(&storyIDs)
+
+
+
+
 	
 }

@@ -11,6 +11,13 @@ type Tree struct {
 	versionMap *treemap.Map // version vs node number
 }
 
+
+
+
+// ONE thign to note is that the DB wont store the childArray in DB to save space
+//  But while building the tree here in RAM we will store the child array as it will be used t o iterate through our path in get version X 
+
+// 
 func NewTree() *Tree { // returns a reference to a new tree
 	var newtre Tree
 	newtre.tree = append(newtre.tree, Node{}) // empty node this will be the 0th node we are doing 1 based indexing so root will be 1st index hence starter is 0th node to avoid any confusion

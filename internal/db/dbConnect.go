@@ -7,12 +7,12 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func DBConnect() {
+func DBConnect() (*mongo.Database, error) {
 
 	err := godotenv.Load(".env")
 
@@ -29,14 +29,15 @@ func DBConnect() {
 
 	opts := options.Client().ApplyURI(mongouri).SetServerAPIOptions(serverAPI)
 
-	client, err := mongo.Connect(opts)
+	client, err := mongo.Connect(context.TODO(), opts)
 
 	database := client.Database("test")
 	// collection := database.Collection("document")
-	err = database.CreateCollection(context.TODO(),"content_sentence")
+	err = database.CreateCollection(context.TODO(), "content_sentence")
 
 	if err != nil {
-		panic(err)
+		// panic(err)
+		return nil, err
 	}
 
 	var result bson.M
@@ -45,4 +46,5 @@ func DBConnect() {
 	}
 	fmt.Println("Pinged your deployment. You successfully connected to MongoDB!")
 
+	return database, nil
 }

@@ -19,7 +19,7 @@ type Node struct { // this is not a Document which will be stored in MongoDB
 	ParrentNode          int      `bson:"parent_id"` // parrent of this node
 	LastSnapshotAncestor int      `bson:"lsa_id"`    // LSA of this node
 	NodeNumber           int      `bson:"node_id"`   // number of this node in version tree
-	
+	Depth 				 int 	  `bson:"depth"`
 	NodeType             NodeType `bson:"node_type"` // snapshot or delta node
 	
 	VersionString        string   `bson:"version_name"` // say uset gives this name as " version1.1 " will be used in mapping with ndoe number
@@ -32,7 +32,7 @@ type Node struct { // this is not a Document which will be stored in MongoDB
 	*/ 
 
 	DeltaInstructions []engine.DeltaInstruction `bson:"delta_instructions,omitempty"` // for delta nodes [ {0/1 ( Add/ DEL) , X ( Line number ), YYYY ( identifier of val) },....]
-	FileArray         []int   `bson:"file_content,omitempty"`                 // this file array is for only Snapshot nodes and thic contains identifiers (mongoDB id's) of 
+	FileArray         []string   `bson:"file_content,omitempty"`                 // this file array is for only Snapshot nodes and thic contains identifiers (SHa 56 of this statement ) of 
 
 }
 
