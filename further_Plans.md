@@ -18,7 +18,7 @@ Our architecture is based on two distinct but connected MongoDB collections: a `
 -   **Schema:** Each document in this collection is a simple mapping from a hash to its content.
     -   `_id` (`string`): The **SHA-256 hash** of the content, stored as a hex string. This is the primary key.
     -   `content` (`string`): The actual line of text.
--   **Benefit:** This design makes "interning" new content stateless. To get the ID for a new line of text, the application simply calculates its SHA-256 hash. No database query is needed to generate an ID.
+-   **Benefit:** This design makes "interning" new content stateless. To get the ID for a new line of text, the application simply calculates its SHA-256 or MURMUR hash. No database query is needed to generate an ID.
 
 ## 2. The Hydration and Caching Strategy
 

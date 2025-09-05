@@ -1,6 +1,6 @@
 package schema
 
-type StringInteger struct {
+type ContentString struct {
 	ID      string `bson:"_id"` // identifier ( SHA 256 Hash ) will be mongoDB id as th would provide fater
 	Content string `bson:"content"`
 }
