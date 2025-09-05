@@ -6,7 +6,6 @@ require (
 	github.com/emirpasic/gods v1.18.1
 	github.com/joho/godotenv v1.5.1
 	go.mongodb.org/mongo-driver v1.17.4
-	go.mongodb.org/mongo-driver/v2 v2.3.0
 )
 
 require (
