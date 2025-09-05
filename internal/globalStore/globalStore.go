@@ -1,5 +1,26 @@
 package globalStore
 
+
+
+
+
+
+
+
+/*
+
+	CHANGE THE THING TO IDENTIFIER AS HASH INSTEAD OF A INTEGER
+
+*/
+
+
+
+
+
+
+
+
+
 import (
 	"fmt"
 	"sync"

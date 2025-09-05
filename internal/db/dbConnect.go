@@ -36,7 +36,7 @@ func DBConnect() (*mongo.Database, error) {
 	err = database.CreateCollection(context.TODO(), "content_sentence")
 
 	if err != nil {
-		panic(err)
+		// panic(err)
 		return nil, err
 	}
 

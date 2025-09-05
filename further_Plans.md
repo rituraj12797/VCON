@@ -48,3 +48,27 @@ When a user opens a file, we perform a one-time "hydration" process to load all 
 -   **Guaranteed Global Deduplication:** Identical content is guaranteed to have the same ID and is stored only once.
 -   **Built-in Data Integrity:** The hash acts as a fingerprint, ensuring the content has not been corrupted.
 -   **High Performance:** The multi-layered caching (Redis + in-memory map) and bulk database operations ensure that rendering versions is extremely fast after the initial load.
+
+
+
+Remaining now 
+0.  (a) Global storages for mapping title vs document to keep dcuments into RAM as cached
+    (b) global primary memory level map for hash vs strings of all the subsets of CAS of diffrent documents 
+
+    
+
+
+1. API ( Get document X ) - this will load the dcument from Db ans tore in a map defined in main.go and store the contents of it's subset of CAS into our in memory global CAS
+
+2. API ( Create Document ) - workflow in copy 
+
+3. APi ( Add version x) - workflow in copy 
+
+4. API ( Get version X ) - workflow in copy
+
+5. Multiprocesing Hasher 
+
+6. Codin the main.go the ( REST ) Server 
+
+7. Refine the already existing get version x to work and return an array f hash from a destined version to a give version working on our defined node structure now 
+
