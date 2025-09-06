@@ -8,7 +8,7 @@ import "fmt"
 // 							LCS = dmallest identifier subsequence common in both
 
 /* CONVERT THIS TO ITERATIVE DP FOR AVOIDING STACK MEMORY EXPLOSION IN LARGER DOCUMENTS */
-func recursion(ind1 int, ind2 int, arr *[]int, brr *[]int, dp *[][]int) int {
+func recursion(ind1 int, ind2 int, arr *[]string, brr *[]string, dp *[][]int) int {
 
 	// prune base case
 	if ind1 >= len(*arr) || ind2 >= len(*brr) {
@@ -35,7 +35,7 @@ func recursion(ind1 int, ind2 int, arr *[]int, brr *[]int, dp *[][]int) int {
 	return ans
 }
 
-func lcsGenerator(ind1 int, ind2 int, arr *[]int, brr *[]int, dp *[][]int, result *[]int) {
+func lcsGenerator(ind1 int, ind2 int, arr *[]string, brr *[]string, dp *[][]int, result *[]string) {
 
 	if ind1 >= len(*arr) || ind2 >= len(*brr) {
 		return
@@ -57,7 +57,7 @@ func lcsGenerator(ind1 int, ind2 int, arr *[]int, brr *[]int, dp *[][]int, resul
 
 }
 
-func LCS(version_x1 *[]int, version_x2 *[]int) ([]int, error) {
+func LCS(version_x1 *[]string, version_x2 *[]string) ([]string, error) {
 
 	var dp [][]int
 
@@ -70,11 +70,10 @@ func LCS(version_x1 *[]int, version_x2 *[]int) ([]int, error) {
 	}
 
 	recursion(0, 0, version_x1, version_x2, &dp)
-	var res []int
+	var res []string
 	lcsGenerator(0, 0, version_x1, version_x2, &dp, &res)
 
 	fmt.Println(" The LCS : ", res)
 
 	return res, nil
-
 }

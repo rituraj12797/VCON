@@ -28,6 +28,7 @@ func main() {
 
 	x.CreateDocument(context.Background(),"new_doc",arr)
 	
+	// global store will be defined in main only ..... so that each may reffer to the single shared global stor e
 
 
  	// 	x := storage.NewTree()

@@ -8,7 +8,7 @@ import (
 
 // this will convert the identifier list into readable content
 
-func ContentRendered(contentNumArray *[]int) {
+func ContentRendered(contentNumArray *[]string) {
 
 	size := len(*contentNumArray)
 
