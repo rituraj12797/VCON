@@ -127,5 +127,5 @@ func (t *DocumentService) FetchDocumentFromDataBaseAndSetGlobalStore(id primitiv
 
 	return nil
 }
- 
+
 
