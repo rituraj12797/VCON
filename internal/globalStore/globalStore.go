@@ -72,7 +72,7 @@ func (t *Store) InternContentString(statement string) error {
 	return nil
 }
 
-func (t *Store) GetStringFromIdentifier(identifier int) (string, error) {
+func (t *Store) GetStringFromIdentifier(identifier string) (string, error) {
 
 	t.mutex.RLock()
 	value, exist := t.identifierToString.Get(identifier)

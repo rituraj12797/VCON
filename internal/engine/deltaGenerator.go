@@ -1,5 +1,7 @@
 package engine
 
+import "vcon/internal/schema"
+
 // this file will generate the delta for converting version x to version x+ 1
 
 // this files received the LCS array , the Xth version array and the X+1th version array
@@ -7,9 +9,9 @@ package engine
 
 // return this set of operation
 
-func GenerateDelta(versionX1, versionX2, lcs *[]int) []DeltaInstruction {
+func GenerateDelta(versionX1, versionX2, lcs *[]string) []schema.DeltaInstruction {
 
-	var delta []DeltaInstruction
+	var delta []schema.DeltaInstruction
 	idx1 := 0
 	idx2 := 0
 	idxLCS := 0
@@ -19,15 +21,15 @@ func GenerateDelta(versionX1, versionX2, lcs *[]int) []DeltaInstruction {
 		// if LCS ended and parrent remaining
 
 		if idx1 < len((*versionX1)) && idxLCS == len((*lcs)) {
-			delta = append(delta, DeltaInstruction{
+			delta = append(delta, schema.DeltaInstruction{
 				DeltaType: 0, // 0 means delete
 				Line:      idx1,
-				Val:       0, // 0 just measa garbage value never use it to identify a string
+				Val:       "nil", // 0 just measa garbage value never use it to identify a string
 			})
 			idx1++
 		} else if idx2 < len((*versionX2)) && idxLCS == len((*lcs)) {
 			// verxionX2 remaining
-			delta = append(delta, DeltaInstruction{
+			delta = append(delta, schema.DeltaInstruction{
 				DeltaType: 1, // 1 means Add
 				Line:      idx1,
 				Val:       (*versionX2)[idx2],
@@ -48,17 +50,17 @@ func GenerateDelta(versionX1, versionX2, lcs *[]int) []DeltaInstruction {
 				// case 2 versionX does not match with LCS Element
 
 				if (*versionX2)[idx2] != (*lcs)[idxLCS] {
-					delta = append(delta, DeltaInstruction{
+					delta = append(delta, schema.DeltaInstruction{
 						DeltaType: 1, // add means 1
 						Line:      idx1,
 						Val:       (*versionX2)[idx2],
 					})
 					idx2++
 				} else if (*versionX1)[idx1] != (*lcs)[idxLCS] {
-					delta = append(delta, DeltaInstruction{
+					delta = append(delta, schema.DeltaInstruction{
 						DeltaType: 0, // Delete means 0
 						Line:      idx1,
-						Val:       0,
+						Val:       "nil",
 					})
 					idx1++
 				}

@@ -1,4 +1,4 @@
-package schema 
+package schema
 
 type DeltaType int
 
@@ -9,6 +9,6 @@ const (
 
 type DeltaInstruction struct {
 	DeltaType DeltaType
-	Line      int // the line of parrent array which wil be affected by it
-	Val       int // identifier of data being added or removed
+	Line      int    // the line of parrent array which wil be affected by it
+	Val       string // SHA-256 identifier of data being added or removed
 }
