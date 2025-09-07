@@ -19,7 +19,6 @@ import (
 	"vcon/internal/schema"
 
 	"github.com/emirpasic/gods/sets/treeset"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -29,7 +28,7 @@ type DocumentService struct {
 	globalStore             *globalStore.Store
 }
 
-func (t *DocumentService) NewDocumentRepository(db *mongo.Database,
+func NewDocumentService(db *mongo.Database,
 	globalStore *globalStore.Store) *DocumentService {
 
 	return &DocumentService{
@@ -111,9 +110,11 @@ func (t *DocumentService) AddDocument(ctx context.Context, title string, stringA
 		})
 	}
 
+	// fmt.Println(" ================================== DONE ===================")
 	err = t.contentStringRepository.AddBulk(ctx, contentStringArray)
 	// save the hash, string pairs in the DB also
 	if err != nil {
+
 		return nil, err //
 	}
 
@@ -130,10 +131,15 @@ func (t *DocumentService) AddDocument(ctx context.Context, title string, stringA
 	// string vs identifier, identifier vs string, title vs document
 
 	// title vs document
-	t.globalStore.InsertNewDocument(title, doc)
+	err = t.globalStore.InsertNewDocument(title, doc)
 
+	if err != nil {
+		fmt.Errorf(" Unable to store new document in globalStore ")
+	}
 	// string vs identifier
+
 	for index, hash := range hasedArray {
+		fmt.Println(" storing h: ", hash, " str: ", stringArray[index])
 		t.globalStore.InternContentString(hash, stringArray[index])
 	}
 
@@ -141,7 +147,7 @@ func (t *DocumentService) AddDocument(ctx context.Context, title string, stringA
 
 }
 
-func (t *DocumentService) AddVersionToDocument(ctx context.Context, docId primitive.ObjectID, docTitle string, parentNode int, stringArr []string) error { // second arguement is the complete statement file
+func (t *DocumentService) AddVersionToDocument(ctx context.Context, docTitle string, parentNode int, stringArr []string) error { // second arguement is the complete statement file
 
 	// WHAT it receives ??
 	// docId - the doument id using whihc we are going to find it in the Data Base
@@ -173,7 +179,7 @@ func (t *DocumentService) AddVersionToDocument(ctx context.Context, docId primit
 
 	// reference to document from globalStore
 	doc, _ := t.globalStore.GetDocumentByTitle(docTitle)
-
+	docId := doc.ID
 	// document now found
 	// verify if parrentNode exists
 	// parrentNode = parrentVersion

@@ -2,7 +2,9 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"vcon/internal/schema"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -29,6 +31,7 @@ func (r *ContentStringRepository) AddBulk(ctx context.Context, contentString []s
 
 	// fil the values into a mongo.WriteModel to do a bulk write
 	for _, cs := range contentString {
+		fmt.Println(" hash : ",cs.Hash, "  string : ",cs.Content)
 		model := mongo.NewInsertOneModel().SetDocument(cs)
 		models = append(models, model)
 	}

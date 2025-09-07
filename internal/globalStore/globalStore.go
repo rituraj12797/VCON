@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 	"vcon/internal/schema"
 
 	"github.com/emirpasic/gods/maps/treemap"
@@ -154,12 +155,29 @@ func (t *Store) GetStringArray(hashArray []string) []string {
 	t.mutex.RLock()
 	defer t.mutex.RUnlock()
 
-	var stringArr []string 
+	var stringArr []string
 
-	for _,hash := range hashArray {
-		str,_ := t.IdentifierToString.Get(hash);
+	for _, hash := range hashArray {
+		str, _ := t.IdentifierToString.Get(hash)
 		stringArr = append(stringArr, str.(string))
 	}
 
 	return stringArr
+}
+
+func (t *Store) AddNodeToDocument(title string, node schema.Node) {
+
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	// update the document and d this node to it
+	// this is the thread safe way to updae the global store
+	// no function in the service or any other layer should be able to update the globalStore it must only be the function defined inside glbalStore that could update the gobalStore
+
+	if doc, found := t.GetDocumentByTitle(title); found == true && doc != nil {
+		doc.NodeArray = append(doc.NodeArray, node)
+		doc.NumberOfNodes++
+		doc.UpdatedAt = time.Now()
+	}
+
 }

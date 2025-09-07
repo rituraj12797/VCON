@@ -75,5 +75,5 @@ func LCS(version_x1 *[]string, version_x2 *[]string) []string {
 
 	fmt.Println(" The LCS : ", res)
 
-	return res, nil
+	return res
 }
