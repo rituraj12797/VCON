@@ -2,8 +2,10 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"vcon/internal/globalStore"
 	"vcon/internal/schema"
 
 	"errors"
@@ -124,6 +126,8 @@ func (r *DocumentRespository) AddNode(ctx context.Context, docId primitive.Objec
 		return errors.New("document not found or modified")
 	}
 
+	
+
 	return nil
 
 }
@@ -157,20 +161,19 @@ func (r *DocumentRespository) FindByTitle(ctx context.Context, title string) (*s
 func (r *DocumentRespository) FindTitleOfAllDocument(ctx context.Context) ([]string, error) {
 	// Use projection to only fetch the 'title' field
 
-	// what are projections and what do they do ?? 
+	// what are projections and what do they do ??
 
 	// Projections are query options whihc optimised our query by twlling whihc files i required and which i do not
-	
-	// with this projection we enabled title and disabled _id 
-	// why disable only id and not any other things ?? 
-	// ==> in mongoDB id is by default included and rest are by default exluded so need to diable it manually 
+
+	// with this projection we enabled title and disabled _id
+	// why disable only id and not any other things ??
+	// ==> in mongoDB id is by default included and rest are by default exluded so need to diable it manually
 
 	opts := options.Find().SetProjection(bson.M{"title": 1, "_id": 0})
 
-	// what below querry does is it finds all the document with matching query bson.M{} means all will be matched and opts is our Projection query whihc tells we only aggregate the title and nothing else 
+	// what below querry does is it finds all the document with matching query bson.M{} means all will be matched and opts is our Projection query whihc tells we only aggregate the title and nothing else
 
-
-	// at last the cursor is the remote aess or the pointer provided to us 
+	// at last the cursor is the remote aess or the pointer provided to us
 	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
 	if err != nil {
 		return nil, err

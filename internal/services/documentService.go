@@ -9,7 +9,10 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
+	"vcon/internal/engine"
 	"vcon/internal/globalStore"
 	"vcon/internal/hasher"
 	"vcon/internal/repository"
@@ -38,20 +41,22 @@ func (t *DocumentService) NewDocumentRepository(db *mongo.Database,
 
 func (t *DocumentService) LoadTitleOfAllDocuments(ctx context.Context) ([]string, error) {
 
-	// fill all the entries into the globalStore to shwo that these exists and for now the valeus keep it as an empty object and will load the object as required with lazy architecture 
+	// fill all the entries into the globalStore to shwo that these exists and for now the valeus keep it as an empty object and will load the object as required with lazy architecture
 
+	stringArr, err := t.documentRespository.FindTitleOfAllDocument(ctx)
 
+	if err != nil {
+		return []string{}, fmt.Errorf("failed to load document titles from DB: %w", err)
+	}
 
-	stringArr := t.documentRespository.FindTitleOfAllDocument(ctx)
-
-	for _,title := range stringArr {
-		t.globalStore.InsertNewDocument(title,&schema.Document{}) // all initially pointing to null document they wil be loaded lazily
+	for _, title := range stringArr {
+		t.globalStore.InsertNewDocument(title, nil) // all initially pointing to null document they wil be loaded lazily
 	}
 
 	return stringArr, nil
 }
 
-func (t *DocumentService) AddDocument(ctx context.Context, title string, stringArray []string ) (*schema.Document, error) {
+func (t *DocumentService) AddDocument(ctx context.Context, title string, stringArray []string) (*schema.Document, error) {
 
 	// WHAT IT RECEIVES
 	// title - title for the document
@@ -68,79 +73,75 @@ func (t *DocumentService) AddDocument(ctx context.Context, title string, stringA
 	// What it returns => ??
 	// when done it returns reference to the created Document with a nil error
 
+	// heck if this file already exists in DB or nor checking in cache ( global store ) wont work here since it may not have that document since it was not needed and hence it may create duplictae titles document
 
-
-	// heck if this file already exists in DB or nor checking in cache ( global store ) wont work here since it may not have that document since it was not needed and hence it may create duplictae titles document 
-
-	// but we can potimise it via multilevel check 
+	// but we can potimise it via multilevel check
 	// first check our globalStore if the title exists or nto - (How does this enure we have data of all document user has created ?? => because at start we run LoadTitleOfAllDocuments)
-	// this pre warms the globalStore with name of all documents that exists and since we will be  updating our globalStore on each file addition we are making our globalStore reliable 
-	// this not only provides spedd but high cache hit rates 
-	// for cases where it is not found ( false negative it eixted in Db but not in cache ) we do a Db call and there by ensuring 100% correctness 
-	
+	// this pre warms the globalStore with name of all documents that exists and since we will be  updating our globalStore on each file addition we are making our globalStore reliable
+	// this not only provides spedd but high cache hit rates
+	// for cases where it is not found ( false negative it eixted in Db but not in cache ) we do a Db call and there by ensuring 100% correctness
 
-	if _,found := t.globalStore.GetDocumentByTitle(title); found {
-		return nil, fmt.Errorf(" Same Title document found with title :",title )
+	if _, found := t.globalStore.GetDocumentByTitle(title); found {
+		return nil, fmt.Errorf(" Same Title document found with title :", title)
 	}
 
-	doc, err := t.documentRespository.FindByTitle(ctx,title)
+	doc, err := t.documentRespository.FindByTitle(ctx, title)
 
 	if err == nil {
-		// a document with same title was found 
-		return nil, fmt.ErrorF(" Same Title document found with title :",title )
+		// a document with same title was found
+		return nil, fmt.Errorf(" Same Title document found with title :", title)
 	}
-	// this checks that the erro is mongoDocumentNotFound else if the other s somethign else we wont proceed 
+	// this checks that the erro is mongoDocumentNotFound else if the other s somethign else we wont proceed
 	if err != mongo.ErrNoDocuments {
-        // problem like a network issue. We must stop and return this error.
-        return nil, fmt.Errorf("failed to check for document existence: %w", err)
-    }
+		// problem like a network issue. We must stop and return this error.
+		return nil, fmt.Errorf("failed to check for document existence: %w", err)
+	}
 
 	// NWO WE ARE SURE THAT THIS DOCUMENT DOES NTO EXIST
 
-	
-	// call hasher to give a hash array 
+	// call hasher to give a hash array
 	hasedArray := hasher.Hasher(stringArray) //
-	
-	var contentStringArray []schema.ContentString;
-	
-	for i,str := range stringArray {
+
+	var contentStringArray []schema.ContentString
+
+	for i, str := range stringArray {
 		contentStringArray = append(contentStringArray, schema.ContentString{
-			Hash: hasedArray[i],
+			Hash:    hasedArray[i],
 			Content: str,
 		})
 	}
 
-	err = t.contentStringRepository.AddBulk(ctx,contentStringArray)
+	err = t.contentStringRepository.AddBulk(ctx, contentStringArray)
 	// save the hash, string pairs in the DB also
 	if err != nil {
-		return nil, err // 
+		return nil, err //
 	}
-	
+
 	// save the documet in DB
 	// send title, hash array to docRepo.CreateDocument
-	doc,err = t.documentRespository.CreateDocument(ctx,title,hasedArray);
+	doc, err = t.documentRespository.CreateDocument(ctx, title, hasedArray)
 
 	if err != nil {
-		return nil,err;
+		return nil, err
 	}
 
 	// stored in the DB
-	// update the global store 
-	// string vs identifier, identifier vs string, title vs document 
+	// update the global store
+	// string vs identifier, identifier vs string, title vs document
 
-	// title vs document 
-	t.globalStore.InsertNewDocument(title,doc);
-	
-	// string vs identifier 
-	for index,hash := range hasedArray {
-		t.globalStore.InternContentString(hash,stringArray[index])
+	// title vs document
+	t.globalStore.InsertNewDocument(title, doc)
+
+	// string vs identifier
+	for index, hash := range hasedArray {
+		t.globalStore.InternContentString(hash, stringArray[index])
 	}
 
 	return doc, nil
 
 }
 
-func (t *DocumentService) AddVersionToDocument(ctx context.Context, docId primitive.ObjectID, docTitle string, parentNode int, stringArr []string, globalStore *globalStore.Store) error { // second arguement is the complete statement file
+func (t *DocumentService) AddVersionToDocument(ctx context.Context, docId primitive.ObjectID, docTitle string, parentNode int, stringArr []string) error { // second arguement is the complete statement file
 
 	// WHAT it receives ??
 	// docId - the doument id using whihc we are going to find it in the Data Base
@@ -160,11 +161,136 @@ func (t *DocumentService) AddVersionToDocument(ctx context.Context, docId primit
 
 	// WHAT IT RETURNS => an error ( nil if succesfully otheriwse a complete error )
 
+	// if document is not in globalStore find and hydrate it
+
+	if _, found := t.globalStore.GetDocumentByTitle(docTitle); found == false {
+		// document not in global store
+		err := t.FetchDocumentFromDataBaseAndSetGlobalStore(ctx, docTitle)
+		if err != nil {
+			return fmt.Errorf("Can't create version since document not found ")
+		}
+	}
+
+	// reference to document from globalStore
+	doc, _ := t.globalStore.GetDocumentByTitle(docTitle)
+
+	// document now found
+	// verify if parrentNode exists
+	// parrentNode = parrentVersion
+
+	if len(doc.NodeArray) <= parentNode {
+		return fmt.Errorf(" parrent version does not exists ")
+	}
+
+	// parrent also exists now
+	// efrecnes to parrent node
+	childNodeNumber := len(doc.NodeArray)
+	pNode := doc.NodeArray[parentNode]
+	pDepth := pNode.Depth
+	// if depth % 10 == 0 | depth == 1 =====> Snapshot
+	// else ================================> Delta
+	childDepth := pDepth + 1
+
+	var lastAncestor int
+	var nodeType schema.NodeType
+	var isSnapShot bool
+
+	// by default asume delta and then if it matches criteria for becoming snapshot make it
+
+	nodeType = schema.NodeTypeDelta
+	lastAncestor = pNode.LastSnapshotAncestor
+	isSnapShot = false
+
+	if childDepth%10 == 0 || childDepth == 1 {
+		isSnapShot = true
+		lastAncestor = childNodeNumber // self LSA
+		nodeType = schema.NodeTypeSnapshot
+	}
+
+	
+	
+	childHash := hasher.Hasher(stringArr)
+	//add the new hashed statement to database and globalStore 
+	var newContentStrings []schema.ContentString
+    for i, hash := range childHash {
+
+        t.globalStore.InternContentString(hash, stringArr[i])
+		// for bulk write 
+        newContentStrings = append(newContentStrings, schema.ContentString{
+            Hash:    hash,
+            Content: stringArr[i],
+        })
+    }
+
+    // perform bulk write 
+    if len(newContentStrings) > 0 {
+        err := t.contentStringRepository.AddBulk(ctx, newContentStrings)
+        if err != nil {
+            return fmt.Errorf("failed to save new content strings to DB: %w", err)
+        }
+    }
+
+
+
+
+	var childNode schema.Node = schema.Node{
+		ParrentNode:          pNode.NodeNumber,
+		LastSnapshotAncestor: lastAncestor,
+		NodeNumber:           childNodeNumber,
+		Depth:                childDepth,
+		NodeType:             nodeType,
+		VersionString:        "nil", // we wont be allowing naming versions for now
+		DeltaInstructions:    []schema.DeltaInstruction{},
+		FileArray:            []string{},
+	}
+
+	if isSnapShot {
+		childNode.FileArray = childHash
+	} else {
+		// operate on the engine and fill the delta array
+
+		parrentHash, err := t.GetVersionFromDocument(ctx, pNode.NodeNumber, docTitle)
+
+		if err != nil {
+			return fmt.Errorf(" Unable to retriev parrent version to compute delta : %w ", err)
+		}
+
+		// now we have parrent hash array  and child hash array use it to
+
+		// 1 find the lcs
+		// find the delta using parrent hash and child hash and lcs
+		// store the delta in child's DeltaInstructions
+
+		// first task find the lcs
+		lcs := engine.LCS(&parrentHash, &childHash)
+
+		// find the delta array
+		var deltaArray []schema.DeltaInstruction
+		deltaArray = engine.GenerateDelta(&parrentHash, &childHash, &lcs)
+
+		// store the delta array
+		childNode.DeltaInstructions = deltaArray
+	}
+
+	// save the node
+	err := t.documentRespository.AddNode(ctx, docId, childNode)
+
+	if err != nil {
+		return err
+	}
+
+	// UPDATED SO NOW UPDATE THE GLOBAL STORE
+
+	// cache updated
+	doc.NodeArray = append(doc.NodeArray, childNode)
+	doc.NumberOfNodes++;
+	doc.UpdatedAt = time.Now()
+
 	return nil
 
 }
 
-func (t *DocumentService) GetDocumentByTitle(ctx context.Context, title string, globalStore *globalStore.Store) (&schema.Document, error) {
+func (t *DocumentService) GetDocumentByTitle(ctx context.Context, title string) (*schema.Document, error) {
 	// WHAT IT RECEIVES ? =>
 	// title - title of the document
 	// globalStore - reference to the global store to Read/Write from
@@ -172,32 +298,31 @@ func (t *DocumentService) GetDocumentByTitle(ctx context.Context, title string, 
 	// WHAT IT DOES
 	// search if the title exists in the in memory map ....
 
-	found, err := globalStore.GetDocumentByTitle(title)
+	doc, found := t.globalStore.GetDocumentByTitle(title)
 
 	// if not found do FetchDocumentFromDataBaseAndSetGlobalStore and store document in globalStor
-	if err != nil {
-		// try to fetch from Db and hydrate the global store now 
-		ner := t.FetchDocumentFromDataBaseAndSetGlobalStore(ctx, title, globalStore)
+	if found == false {
+		// try to fetch from Db and hydrate the global store now
+		ner := t.FetchDocumentFromDataBaseAndSetGlobalStore(ctx, title)
 
 		if ner != nil {
 			return nil, ner
 		}
 	}
 
-	// now by here it is surely inside the globalStorage 
-	found = globalStore.GetDocumentByTitle(title)
-	// set current Document 
-	globalStore.ChangeCurrent(found);
+	// now by here it is surely inside the globalStorage
+	doc, _ = t.globalStore.GetDocumentByTitle(title)
+	// set current Document
+	t.globalStore.ChangeCurrent(doc)
 
-
-	return &found, nil
+	return doc, nil
 	// this will set the current document
 	// WHAT IT RETURNS  ==>
-	//  A schema.Document object 
+	//  A schema.Document object
 
 }
 
-func (t *DocumentService) GetVersionFromDocument(ctx context.Context, versionNumber int, docTitle string, globalStore *globalStore.Store) ([]string, error) {
+func (t *DocumentService) GetVersionFromDocument(ctx context.Context, versionNumber int, docTitle string) ([]string, error) {
 
 	// WHAT IT RECEIVES ??
 	// versionNumber - the node number = version number which teh user is asking
@@ -214,11 +339,10 @@ func (t *DocumentService) GetVersionFromDocument(ctx context.Context, versionNum
 
 	// WHAT IT RETURNS
 	// return the hashed array and from there, content renderer will take charge and rendere the complete human readable format
-
+	u
 }
 
-
-func (t *DocumentService) FetchDocumentFromDataBaseAndSetGlobalStore(ctx context.Context, title string, globalStore *globalStore.Store) error {
+func (t *DocumentService) FetchDocumentFromDataBaseAndSetGlobalStore(ctx context.Context, title string) error {
 
 	// WHAT IT DOES
 	// => fetch it from DB and set a title vs Document entry in globalStore
@@ -233,7 +357,7 @@ func (t *DocumentService) FetchDocumentFromDataBaseAndSetGlobalStore(ctx context
 
 	// document fetched soccesfully
 	// hydrated the store
-	globalStore.InsertNewDocument(title, doc)
+	t.globalStore.InsertNewDocument(title, doc)
 
 	// PART 2
 
@@ -282,7 +406,7 @@ func (t *DocumentService) FetchDocumentFromDataBaseAndSetGlobalStore(ctx context
 
 	// we got result aray hydrate the global store now
 	for _, contentString := range resultArr {
-		globalStore.InternContentString(contentString.Hash, contentString.Content) // pased hash , content
+		t.globalStore.InternContentString(contentString.Hash, contentString.Content) // pased hash , content
 	}
 
 	// find all hashes whihc are used in this
