@@ -45,7 +45,7 @@ func Initialize() {
 	GlobalStore = InitializeStore()
 }
 
-func (t *Store) InternContentString(statement string) error {
+func (t *Store) InternContentString(hash string, statement string) error {
 	// check if the string already exits or not
 	t.mutex.RLock()
 	_, exist := t.stringToIdentifier.Get(statement)
@@ -68,6 +68,10 @@ func (t *Store) InternContentString(statement string) error {
 	if ext {
 		return nil
 	}
+
+	// nope no one has inserted till now
+	t.stringToIdentifier.Put(statement, hash) //
+	t.identifierToString.Put(hash, statement) //
 
 	return nil
 }
@@ -133,14 +137,14 @@ func (t *Store) GetCurrentDoc() (*schema.Document, error) {
 	return t.currentDocument, nil
 }
 
-func (t *Store) GetDocumentByTitle(title string) (*schema.Document, error) {
+func (t *Store) GetDocumentByTitle(title string) (*schema.Document, bool) {
 	t.mutex.RLock()
 	defer t.mutex.RUnlock()
 
 	doc, found := t.titleToDocument.Get(title)
 	if !found {
-		return nil, fmt.Errorf("document with title '%s' not found", title)
+		return nil, false
 	}
 
-	return doc.(*schema.Document), nil
+	return doc.(*schema.Document), true
 }

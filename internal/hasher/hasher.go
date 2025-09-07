@@ -19,7 +19,7 @@ type result struct {
 }
 
 // HashStringsInParallel calculates the sha256 hash for an array of strings using true parallelism ( multi processing ).
-func HashStringsInParallel(lines []string) []string {
+func Hasher(lines []string) []string {
 	numLines := len(lines)
 
 	if numLines == 0 {
