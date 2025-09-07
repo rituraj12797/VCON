@@ -148,3 +148,18 @@ func (t *Store) GetDocumentByTitle(title string) (*schema.Document, bool) {
 
 	return doc.(*schema.Document), true
 }
+
+func (t *Store) GetStringArray(hashArray []string) []string {
+
+	t.mutex.RLock()
+	defer t.mutex.RUnlock()
+
+	var stringArr []string 
+
+	for _,hash := range hashArray {
+		str,_ := t.IdentifierToString.Get(hash);
+		stringArr = append(stringArr, str.(string))
+	}
+
+	return stringArr
+}

@@ -9,7 +9,6 @@ package services
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 	"vcon/internal/engine"
@@ -207,31 +206,26 @@ func (t *DocumentService) AddVersionToDocument(ctx context.Context, docId primit
 		nodeType = schema.NodeTypeSnapshot
 	}
 
-	
-	
 	childHash := hasher.Hasher(stringArr)
-	//add the new hashed statement to database and globalStore 
+	//add the new hashed statement to database and globalStore
 	var newContentStrings []schema.ContentString
-    for i, hash := range childHash {
+	for i, hash := range childHash {
 
-        t.globalStore.InternContentString(hash, stringArr[i])
-		// for bulk write 
-        newContentStrings = append(newContentStrings, schema.ContentString{
-            Hash:    hash,
-            Content: stringArr[i],
-        })
-    }
+		t.globalStore.InternContentString(hash, stringArr[i])
+		// for bulk write
+		newContentStrings = append(newContentStrings, schema.ContentString{
+			Hash:    hash,
+			Content: stringArr[i],
+		})
+	}
 
-    // perform bulk write 
-    if len(newContentStrings) > 0 {
-        err := t.contentStringRepository.AddBulk(ctx, newContentStrings)
-        if err != nil {
-            return fmt.Errorf("failed to save new content strings to DB: %w", err)
-        }
-    }
-
-
-
+	// perform bulk write
+	if len(newContentStrings) > 0 {
+		err := t.contentStringRepository.AddBulk(ctx, newContentStrings)
+		if err != nil {
+			return fmt.Errorf("failed to save new content strings to DB: %w", err)
+		}
+	}
 
 	var childNode schema.Node = schema.Node{
 		ParrentNode:          pNode.NodeNumber,
@@ -283,7 +277,7 @@ func (t *DocumentService) AddVersionToDocument(ctx context.Context, docId primit
 
 	// cache updated
 	doc.NodeArray = append(doc.NodeArray, childNode)
-	doc.NumberOfNodes++;
+	doc.NumberOfNodes++
 	doc.UpdatedAt = time.Now()
 
 	return nil
@@ -339,8 +333,14 @@ func (t *DocumentService) GetVersionFromDocument(ctx context.Context, versionNum
 
 	// WHAT IT RETURNS
 	// return the hashed array and from there, content renderer will take charge and rendere the complete human readable format
-	u
+
+
+
+
+
 }
+
+
 
 func (t *DocumentService) FetchDocumentFromDataBaseAndSetGlobalStore(ctx context.Context, title string) error {
 
