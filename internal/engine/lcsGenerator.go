@@ -57,7 +57,7 @@ func lcsGenerator(ind1 int, ind2 int, arr *[]string, brr *[]string, dp *[][]int,
 
 }
 
-func LCS(version_x1 *[]string, version_x2 *[]string) ([]string, error) {
+func LCS(version_x1 *[]string, version_x2 *[]string) []string {
 
 	var dp [][]int
 
