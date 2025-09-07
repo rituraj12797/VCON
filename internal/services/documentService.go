@@ -10,6 +10,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 	"vcon/internal/engine"
 	"vcon/internal/globalStore"
@@ -256,11 +257,11 @@ func (t *DocumentService) AddVersionToDocument(ctx context.Context, docId primit
 		// store the delta in child's DeltaInstructions
 
 		// first task find the lcs
-		lcs := engine.LCS(&parrentHash, &childHash)
+		lcs := engine.LCS(parrentHash, &childHash)
 
 		// find the delta array
 		var deltaArray []schema.DeltaInstruction
-		deltaArray = engine.GenerateDelta(&parrentHash, &childHash, &lcs)
+		deltaArray = engine.GenerateDelta(parrentHash, &childHash, &lcs)
 
 		// store the delta array
 		childNode.DeltaInstructions = deltaArray
@@ -316,7 +317,7 @@ func (t *DocumentService) GetDocumentByTitle(ctx context.Context, title string) 
 
 }
 
-func (t *DocumentService) GetVersionFromDocument(ctx context.Context, versionNumber int, docTitle string) ([]string, error) {
+func (t *DocumentService) GetVersionFromDocument(ctx context.Context, versionNumber int, docTitle string) (*[]string, error) {
 
 	// WHAT IT RECEIVES ??
 	// versionNumber - the node number = version number which teh user is asking
@@ -334,13 +335,74 @@ func (t *DocumentService) GetVersionFromDocument(ctx context.Context, versionNum
 	// WHAT IT RETURNS
 	// return the hashed array and from there, content renderer will take charge and rendere the complete human readable format
 
+	// given version number
+	// verify if the document exists in globalStore
+	// if not then fetch from DB and put in globalStore => FetchDocumentFromDataBaseAndSetGlobalStore
+	// once in global store then fetch LSA
 
+	// 1 generate path as an array where first element is LSA nodeNumber and last element is current version node number
+	// 2. generate a resultStringArray and a parrentFileStringArray
+	//    2.1 resultStringArray is the curent version and parrentFileStringArray is the complete rendered parrent string document
+	// 3 iterate on the path and update result and parent array each iteration uing the applyDelta from the engine
 
+	// at last we have the final version return this hash array
 
+	if _, err := t.GetDocumentByTitle(ctx, docTitle); err != nil {
+		t.FetchDocumentFromDataBaseAndSetGlobalStore(ctx, docTitle)
+	}
+
+	doc, _ := t.globalStore.GetDocumentByTitle(docTitle)
+
+	if len(doc.NodeArray) <= versionNumber {
+		return nil, fmt.Errorf(" Version not in the file ")
+	}
+
+	// version available
+	requiredNode := doc.NodeArray[versionNumber]
+
+	if requiredNode.LastSnapshotAncestor == versionNumber {
+		// this node itself is the snapShot node return the hash array
+		return &requiredNode.FileArray, nil
+	}
+
+	// ELSE THIS IS THE DELTA NODE
+
+	// got the required node
+	// our reqd version is versionNumber
+	var parrentNodeNumber int = requiredNode.ParrentNode
+	var lastSnapShotAncestor int = requiredNode.LastSnapshotAncestor
+
+	// fidn th path from LSA to this version
+	var path []int
+	path = append(path, versionNumber); // first element is us 
+	for parrentNodeNumber != lastSnapShotAncestor {
+		path = append(path, parrentNodeNumber)
+		parrentNodeNumber = doc.NodeArray[parrentNodeNumber].ParrentNode
+	}
+	// last element would be LSA so
+	path = append(path, parrentNodeNumber)
+
+	// now we hae a path from say we want verion 20 it's parrent is 19 and LSA is version 15
+	// path = {20, 19, .... , 15}
+
+	slices.Reverse(path)
+	// reverse not 0th element is LSA ==> kep the parret as the fileArray of Snapshot  an iterate from index 1 to last index
+
+	var parrentFile []string
+	var currentFile []string
+
+	parrentFile = doc.NodeArray[lastSnapShotAncestor].FileArray // complete file of snapshot
+
+	for i := 1; i < len(path); i++ {
+		currntNode := path[i]
+		currentFile = engine.ApplyDelta(parrentFile, doc.NodeArray[currntNode].DeltaInstructions)
+		parrentFile = currentFile
+	}
+
+	// the currentFile now contains our file and we must return this
+	return &currentFile, nil
 
 }
-
-
 
 func (t *DocumentService) FetchDocumentFromDataBaseAndSetGlobalStore(ctx context.Context, title string) error {
 
