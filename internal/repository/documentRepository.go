@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // This is the abstraction to define the interface through which we will tak with the DataBase since Go doesnot have a standard ODm we define it ourselvs the way we talk with DB.
@@ -151,4 +152,45 @@ func (r *DocumentRespository) FindByTitle(ctx context.Context, title string) (*s
 	}
 
 	return &doc, nil
+}
+
+func (r *DocumentRespository) FindTitleOfAllDocument(ctx context.Context) ([]string, error) {
+	// Use projection to only fetch the 'title' field
+
+	// what are projections and what do they do ?? 
+
+	// Projections are query options whihc optimised our query by twlling whihc files i required and which i do not
+	
+	// with this projection we enabled title and disabled _id 
+	// why disable only id and not any other things ?? 
+	// ==> in mongoDB id is by default included and rest are by default exluded so need to diable it manually 
+
+	opts := options.Find().SetProjection(bson.M{"title": 1, "_id": 0})
+
+	// what below querry does is it finds all the document with matching query bson.M{} means all will be matched and opts is our Projection query whihc tells we only aggregate the title and nothing else 
+
+
+	// at last the cursor is the remote aess or the pointer provided to us 
+	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var titles []string
+	for cursor.Next(ctx) {
+		var result struct {
+			Title string `bson:"title"`
+		}
+		if err := cursor.Decode(&result); err != nil {
+			return nil, err
+		}
+		titles = append(titles, result.Title)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return titles, nil
 }

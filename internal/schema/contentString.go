@@ -1,8 +1,11 @@
 package schema
 
+import "go.mongodb.org/mongo-driver/bson/primitive"
+
 type ContentString struct {
-	ID      string `bson:"_id"` // identifier ( SHA 256 Hash ) will be mongoDB id as th would provide fater
-	Content string `bson:"content"`
+	ID      primitive.ObjectID `bson:"_id"`
+	Hash    string             `bson:"hash"` // identifier ( SHA 256 Hash ) will be mongoDB id as th would provide fater
+	Content string             `bson:"content"`
 }
 
 /*
