@@ -257,11 +257,11 @@ func (t *DocumentService) AddVersionToDocument(ctx context.Context, docId primit
 		// store the delta in child's DeltaInstructions
 
 		// first task find the lcs
-		lcs := engine.LCS(parrentHash, &childHash)
+		lcs := engine.LCS(&parrentHash, &childHash)
 
 		// find the delta array
 		var deltaArray []schema.DeltaInstruction
-		deltaArray = engine.GenerateDelta(parrentHash, &childHash, &lcs)
+		deltaArray = engine.GenerateDelta(&parrentHash, &childHash, &lcs)
 
 		// store the delta array
 		childNode.DeltaInstructions = deltaArray
@@ -317,7 +317,7 @@ func (t *DocumentService) GetDocumentByTitle(ctx context.Context, title string) 
 
 }
 
-func (t *DocumentService) GetVersionFromDocument(ctx context.Context, versionNumber int, docTitle string) (*[]string, error) {
+func (t *DocumentService) GetVersionFromDocument(ctx context.Context, versionNumber int, docTitle string) ([]string, error) {
 
 	// WHAT IT RECEIVES ??
 	// versionNumber - the node number = version number which teh user is asking
@@ -347,10 +347,14 @@ func (t *DocumentService) GetVersionFromDocument(ctx context.Context, versionNum
 
 	// at last we have the final version return this hash array
 
-	if _, err := t.GetDocumentByTitle(ctx, docTitle); err != nil {
-		t.FetchDocumentFromDataBaseAndSetGlobalStore(ctx, docTitle)
+	if _, found := t.globalStore.GetDocumentByTitle(docTitle); found == false {
+		err := t.FetchDocumentFromDataBaseAndSetGlobalStore(ctx, docTitle)
+		if err != nil {
+			return []string{}, err
+		}
 	}
 
+	// we arrived here means the document either was lready in memory or was find out from Db and hydrated to memory  and soe error not occoured
 	doc, _ := t.globalStore.GetDocumentByTitle(docTitle)
 
 	if len(doc.NodeArray) <= versionNumber {
@@ -362,7 +366,7 @@ func (t *DocumentService) GetVersionFromDocument(ctx context.Context, versionNum
 
 	if requiredNode.LastSnapshotAncestor == versionNumber {
 		// this node itself is the snapShot node return the hash array
-		return &requiredNode.FileArray, nil
+		return requiredNode.FileArray, nil
 	}
 
 	// ELSE THIS IS THE DELTA NODE
@@ -374,7 +378,7 @@ func (t *DocumentService) GetVersionFromDocument(ctx context.Context, versionNum
 
 	// fidn th path from LSA to this version
 	var path []int
-	path = append(path, versionNumber); // first element is us 
+	path = append(path, versionNumber) // first element is us
 	for parrentNodeNumber != lastSnapShotAncestor {
 		path = append(path, parrentNodeNumber)
 		parrentNodeNumber = doc.NodeArray[parrentNodeNumber].ParrentNode
@@ -400,7 +404,7 @@ func (t *DocumentService) GetVersionFromDocument(ctx context.Context, versionNum
 	}
 
 	// the currentFile now contains our file and we must return this
-	return &currentFile, nil
+	return currentFile, nil
 
 }
 

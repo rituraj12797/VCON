@@ -2,10 +2,7 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"time"
-
-	"vcon/internal/globalStore"
 	"vcon/internal/schema"
 
 	"errors"
@@ -125,8 +122,6 @@ func (r *DocumentRespository) AddNode(ctx context.Context, docId primitive.Objec
 	if result.ModifiedCount == 0 {
 		return errors.New("document not found or modified")
 	}
-
-	
 
 	return nil
 
