@@ -156,6 +156,7 @@ func main() {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "version must be a valid number"})
 			return
 		}
+
 		contentHashes, err := docService.GetVersionFromDocument(c.Request.Context(), version, title)
         if err != nil {
             c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
@@ -165,7 +166,7 @@ func main() {
         stringContent, err := docService.ConvertHashesToStrings(contentHashes)
 
         if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to render document content"})
+            c.JSON(http.StatusInternalServerError, gin.H{"error": err})
             return
         }
 
