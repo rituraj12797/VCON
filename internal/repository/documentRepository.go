@@ -192,3 +192,8 @@ func (r *DocumentRespository) FindTitleOfAllDocument(ctx context.Context) ([]str
 
 	return titles, nil
 }
+
+func (r *DocumentRespository) DeleteByTitle(ctx context.Context, title string) error {
+	_, err := r.collection.DeleteOne(ctx, bson.M{"title": title})
+	return err
+}

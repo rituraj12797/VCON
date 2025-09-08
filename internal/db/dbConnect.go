@@ -33,12 +33,6 @@ func DBConnect() (*mongo.Database, error) {
 
 	database := client.Database("test")
 	// collection := database.Collection("document")
-	err = database.CreateCollection(context.TODO(), "content_sentence")
-
-	if err != nil {
-		// panic(err)
-		return nil, err
-	}
 
 	var result bson.M
 	if err := client.Database("admin").RunCommand(context.TODO(), bson.D{{"ping", 1}}).Decode(&result); err != nil {

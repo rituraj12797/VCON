@@ -19,7 +19,6 @@ import (
 	"vcon/internal/schema"
 
 	"github.com/emirpasic/gods/sets/treeset"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -29,7 +28,7 @@ type DocumentService struct {
 	globalStore             *globalStore.Store
 }
 
-func (t *DocumentService) NewDocumentRepository(db *mongo.Database,
+func NewDocumentService(db *mongo.Database,
 	globalStore *globalStore.Store) *DocumentService {
 
 	return &DocumentService{
@@ -111,9 +110,11 @@ func (t *DocumentService) AddDocument(ctx context.Context, title string, stringA
 		})
 	}
 
+	// fmt.Println(" ================================== DONE ===================")
 	err = t.contentStringRepository.AddBulk(ctx, contentStringArray)
 	// save the hash, string pairs in the DB also
 	if err != nil {
+
 		return nil, err //
 	}
 
@@ -130,9 +131,13 @@ func (t *DocumentService) AddDocument(ctx context.Context, title string, stringA
 	// string vs identifier, identifier vs string, title vs document
 
 	// title vs document
-	t.globalStore.InsertNewDocument(title, doc)
+	err = t.globalStore.InsertNewDocument(title, doc)
 
+	if err != nil {
+		fmt.Errorf(" Unable to store new document in globalStore ")
+	}
 	// string vs identifier
+
 	for index, hash := range hasedArray {
 		t.globalStore.InternContentString(hash, stringArray[index])
 	}
@@ -141,7 +146,7 @@ func (t *DocumentService) AddDocument(ctx context.Context, title string, stringA
 
 }
 
-func (t *DocumentService) AddVersionToDocument(ctx context.Context, docId primitive.ObjectID, docTitle string, parentNode int, stringArr []string) error { // second arguement is the complete statement file
+func (t *DocumentService) AddVersionToDocument(ctx context.Context, docTitle string, parentNode int, stringArr []string) error { // second arguement is the complete statement file
 
 	// WHAT it receives ??
 	// docId - the doument id using whihc we are going to find it in the Data Base
@@ -173,7 +178,7 @@ func (t *DocumentService) AddVersionToDocument(ctx context.Context, docId primit
 
 	// reference to document from globalStore
 	doc, _ := t.globalStore.GetDocumentByTitle(docTitle)
-
+	docId := doc.ID
 	// document now found
 	// verify if parrentNode exists
 	// parrentNode = parrentVersion
@@ -413,37 +418,35 @@ func (t *DocumentService) FetchDocumentFromDataBaseAndSetGlobalStore(ctx context
 	// WHAT IT DOES
 	// => fetch it from DB and set a title vs Document entry in globalStore
 	// => fetch the usable set of strings used to render any version of this and set them in globalstore string vs dentifier ( Hydration )
-
 	doc, err := t.documentRespository.FindByTitle(ctx, title)
-
+	
 	if err != nil {
 		// fmt.Println(" Error While fetching and saving in Global Store")
 		return err
 	}
-
+	
 	// document fetched soccesfully
 	// hydrated the store
 	t.globalStore.InsertNewDocument(title, doc)
-
+	
 	// PART 2
-
+	
 	// hydrate the contentString store now
 	// for this we will consider all the hashes from the snapshot nodes
 	// and
 	// consider all the hashes that were related to add query in delta nodes and add them too
 	// this final hash node list make it unique
 	// then return a cursor pointer to this result
-
+	
 	set := treeset.NewWithStringComparator()
-
-	for j, node := range doc.NodeArray {
+	
+	for _, node := range doc.NodeArray {
 		// node is doc.NodeArray[j] now
-
-		if j > 0 { // skip the pseudo root node
-			if node.NodeType == schema.NodeTypeSnapshot {
-				for _, hash := range node.FileArray {
-					set.Add(hash)
-				}
+		// skip the pseudo root node
+		if node.NodeType == schema.NodeTypeSnapshot {
+			for _, hash := range node.FileArray {
+				set.Add(hash)
+			}
 			} else {
 				for _, deltaInstruction := range node.DeltaInstructions {
 					if deltaInstruction.DeltaType == schema.A { // Add type instruction
@@ -452,30 +455,50 @@ func (t *DocumentService) FetchDocumentFromDataBaseAndSetGlobalStore(ctx context
 				}
 			}
 		}
-	}
-
-	// set is the list of hashes required to render any version of this file
-	// / /get them into an array
+		
+		// set is the list of hashes required to render any version of this file
+		// / /get them into an array
 	var hashArr []string
 	for _, v := range set.Values() {
 		hashArr = append(hashArr, v.(string))
 	}
-
+	
 	var resultArr []schema.ContentString // the result from the dataBase ( contains objects with hash vs string )
-
+	
 	// then using this hash array we would run the bulk read operation from contentStringrepo and hydrate the globalStore.stringToIdentifier and globalStore.identifiertoString
 	resultArr, err = t.contentStringRepository.BulkReader(ctx, hashArr)
-
+	
 	if err != nil {
 		return err
 	}
 
+	fmt.Println(" ====== DEBUG ====== ")
+	fmt.Println(" Size of resultArr : ",len(resultArr), " size of HashArray : ",len(hashArr))
 	// we got result aray hydrate the global store now
 	for _, contentString := range resultArr {
 		t.globalStore.InternContentString(contentString.Hash, contentString.Content) // pased hash , content
+		fmt.Println("hash : ", contentString.Hash, " content : ", contentString.Content)
 	}
 
 	// find all hashes whihc are used in this
 
 	return nil
+}
+
+func (t *DocumentService) ConvertHashesToStrings(hashes []string) ([]string, error) {
+
+	var res []string
+
+	for _, entry := range hashes {
+		val, err := t.globalStore.GetStringFromIdentifier(entry)
+
+		if err != nil {
+			fmt.Println("error : ", err)
+			return []string{}, err
+		}
+
+		res = append(res, val)
+	}
+
+	return res, nil
 }
