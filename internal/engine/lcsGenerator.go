@@ -1,6 +1,5 @@
 package engine
 
-import "fmt"
 
 // currentl we will pass the version x ====> Array of sentence identifier
 //								   x+1 ====> Array of sentence identifier
@@ -73,7 +72,7 @@ func LCS(version_x1 *[]string, version_x2 *[]string) []string {
 	var res []string
 	lcsGenerator(0, 0, version_x1, version_x2, &dp, &res)
 
-	fmt.Println(" The LCS : ", res)
+	// fmt.Println(" The LCS : ", res)
 
 	return res
 }

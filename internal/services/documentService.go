@@ -139,7 +139,6 @@ func (t *DocumentService) AddDocument(ctx context.Context, title string, stringA
 	// string vs identifier
 
 	for index, hash := range hasedArray {
-		fmt.Println(" storing h: ", hash, " str: ", stringArray[index])
 		t.globalStore.InternContentString(hash, stringArray[index])
 	}
 
@@ -484,4 +483,21 @@ func (t *DocumentService) FetchDocumentFromDataBaseAndSetGlobalStore(ctx context
 	// find all hashes whihc are used in this
 
 	return nil
+}
+
+func (t *DocumentService) ConvertHashesToStrings(hashes []string) ( []string, error){
+
+	var res []string;
+
+	for _,entry := range hashes{
+		val, err := t.globalStore.GetStringFromIdentifier(entry)
+
+		if err != nil {
+			return []string{},err
+		}
+
+		res = append(res, val)
+	}
+
+	return res,nil
 }
