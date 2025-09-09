@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 	"vcon/internal/db"
 	"vcon/internal/globalStore"
 	"vcon/internal/services"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -32,6 +34,17 @@ func main() {
 
 	// start server and attck controllers to API routes
 	router := gin.Default()
+
+	// Add CORS middleware
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5173", "http://127.0.0.1:3000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
@@ -89,7 +102,7 @@ func main() {
 		title := c.Query("title")
 
 		doc, err := docService.GetDocumentByTitle(context.Background(), title)
-
+		fmt.Println(" Doc : ", doc)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -120,6 +133,10 @@ func main() {
 			return
 		}
 
+		fmt.Println("title : ", ReqBody.DocTitle)
+		fmt.Println(" parrentnode :  ", ReqBody.ParentNode)
+		fmt.Println(" stringArr : ", ReqBody.StringArr)
+
 		err := docService.AddVersionToDocument(context.Background(), ReqBody.DocTitle, ReqBody.ParentNode, ReqBody.StringArr)
 
 		if err != nil {
@@ -139,7 +156,7 @@ func main() {
 	router.GET("/getversion", func(c *gin.Context) {
 
 		// /getversion?title=My First Document&version=2
-		
+
 		title := c.Query("title")
 		if title == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "title query parameter is required"})
@@ -158,26 +175,25 @@ func main() {
 		}
 
 		contentHashes, err := docService.GetVersionFromDocument(c.Request.Context(), version, title)
-        if err != nil {
-            c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-            return
-        }
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 
-        stringContent, err := docService.ConvertHashesToStrings(contentHashes)
+		stringContent, err := docService.ConvertHashesToStrings(contentHashes)
 
-        if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": err})
-            return
-        }
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			return
+		}
 
-        c.JSON(http.StatusOK, gin.H{
-            "title":   title,
-            "version": version,
-            "content": stringContent,
-        })
-
+		c.JSON(http.StatusOK, gin.H{
+			"title":   title,
+			"version": version,
+			"content": stringContent,
+		})
 
 	})
 
-	router.Run()
+	router.Run(":4000")
 }

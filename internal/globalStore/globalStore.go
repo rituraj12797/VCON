@@ -141,7 +141,7 @@ func (t *Store) GetCurrentDoc() (*schema.Document, error) {
 func (t *Store) GetDocumentByTitle(title string) (*schema.Document, bool) {
 	t.mutex.RLock()
 	defer t.mutex.RUnlock()
-
+	
 	doc, found := t.TitleToDocument.Get(title)
 	if !found {
 		return nil, false
