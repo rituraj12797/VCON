@@ -48,10 +48,6 @@ func (t *DocumentService) LoadTitleOfAllDocuments(ctx context.Context) ([]string
 		return []string{}, fmt.Errorf("failed to load document titles from DB: %w", err)
 	}
 
-	for _, title := range stringArr {
-		t.globalStore.InsertNewDocument(title, nil) // all initially pointing to null document they wil be loaded lazily
-	}
-
 	return stringArr, nil
 }
 
@@ -300,8 +296,10 @@ func (t *DocumentService) GetDocumentByTitle(ctx context.Context, title string) 
 
 	doc, found := t.globalStore.GetDocumentByTitle(title)
 
+	fmt.Println("fouhd : ",true,"   doc : ",doc)
 	// if not found do FetchDocumentFromDataBaseAndSetGlobalStore and store document in globalStor
-	if found == false {
+	if found == false || (found == true && doc == nil)  { // second means it is there in globalstore but nil only titles have been fetced )
+		fmt.Println(" not foud in kv store noe fetching DB")
 		// try to fetch from Db and hydrate the global store now
 		ner := t.FetchDocumentFromDataBaseAndSetGlobalStore(ctx, title)
 
@@ -312,6 +310,7 @@ func (t *DocumentService) GetDocumentByTitle(ctx context.Context, title string) 
 
 	// now by here it is surely inside the globalStorage
 	doc, _ = t.globalStore.GetDocumentByTitle(title)
+	fmt.Println("title : ", title, " doc : ", doc)
 	// set current Document
 	t.globalStore.ChangeCurrent(doc)
 
@@ -419,27 +418,28 @@ func (t *DocumentService) FetchDocumentFromDataBaseAndSetGlobalStore(ctx context
 	// => fetch it from DB and set a title vs Document entry in globalStore
 	// => fetch the usable set of strings used to render any version of this and set them in globalstore string vs dentifier ( Hydration )
 	doc, err := t.documentRespository.FindByTitle(ctx, title)
-	
+
 	if err != nil {
-		// fmt.Println(" Error While fetching and saving in Global Store")
+		fmt.Println(" Error While fetching and saving in Global Store")
 		return err
 	}
-	
+
 	// document fetched soccesfully
+	fmt.Println(" fetched fromo DB : ", doc)
 	// hydrated the store
 	t.globalStore.InsertNewDocument(title, doc)
-	
+
 	// PART 2
-	
+
 	// hydrate the contentString store now
 	// for this we will consider all the hashes from the snapshot nodes
 	// and
 	// consider all the hashes that were related to add query in delta nodes and add them too
 	// this final hash node list make it unique
 	// then return a cursor pointer to this result
-	
+
 	set := treeset.NewWithStringComparator()
-	
+
 	for _, node := range doc.NodeArray {
 		// node is doc.NodeArray[j] now
 		// skip the pseudo root node
@@ -447,33 +447,33 @@ func (t *DocumentService) FetchDocumentFromDataBaseAndSetGlobalStore(ctx context
 			for _, hash := range node.FileArray {
 				set.Add(hash)
 			}
-			} else {
-				for _, deltaInstruction := range node.DeltaInstructions {
-					if deltaInstruction.DeltaType == schema.A { // Add type instruction
-						set.Add(deltaInstruction.Val) // added hash of dela instruction
-					}
+		} else {
+			for _, deltaInstruction := range node.DeltaInstructions {
+				if deltaInstruction.DeltaType == schema.A { // Add type instruction
+					set.Add(deltaInstruction.Val) // added hash of dela instruction
 				}
 			}
 		}
-		
-		// set is the list of hashes required to render any version of this file
-		// / /get them into an array
+	}
+
+	// set is the list of hashes required to render any version of this file
+	// / /get them into an array
 	var hashArr []string
 	for _, v := range set.Values() {
 		hashArr = append(hashArr, v.(string))
 	}
-	
+
 	var resultArr []schema.ContentString // the result from the dataBase ( contains objects with hash vs string )
-	
+
 	// then using this hash array we would run the bulk read operation from contentStringrepo and hydrate the globalStore.stringToIdentifier and globalStore.identifiertoString
 	resultArr, err = t.contentStringRepository.BulkReader(ctx, hashArr)
-	
+
 	if err != nil {
 		return err
 	}
 
 	fmt.Println(" ====== DEBUG ====== ")
-	fmt.Println(" Size of resultArr : ",len(resultArr), " size of HashArray : ",len(hashArr))
+	fmt.Println(" Size of resultArr : ", len(resultArr), " size of HashArray : ", len(hashArr))
 	// we got result aray hydrate the global store now
 	for _, contentString := range resultArr {
 		t.globalStore.InternContentString(contentString.Hash, contentString.Content) // pased hash , content
