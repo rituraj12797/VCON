@@ -23,7 +23,7 @@ func DBConnect() (*mongo.Database, error) {
 
 	mongouri := os.Getenv("MONGO_URI")
 
-	fmt.Println(" this is our mongo connection url : ", mongouri)
+	// fmt.Println(" this is our mongo connection url : ", mongouri)
 
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 
@@ -35,7 +35,7 @@ func DBConnect() (*mongo.Database, error) {
 	// collection := database.Collection("document")
 
 	var result bson.M
-	if err := client.Database("admin").RunCommand(context.TODO(), bson.D{{"ping", 1}}).Decode(&result); err != nil {
+	if err := client.Database("admin").RunCommand(context.TODO(), bson.D{{Key: "ping", Value: 1}}).Decode(&result); err != nil {
 		panic(err)
 	}
 	fmt.Println("Pinged your deployment. You successfully connected to MongoDB!")

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 	"vcon/internal/db"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 type pureDocument struct {
@@ -62,7 +64,7 @@ func main() {
 
 		// else we have the document from the frontn d
 
-		docSaved, err := docService.AddDocument(context.Background(), requestDocument.Title, requestDocument.Array)
+		_, err := docService.AddDocument(context.Background(), requestDocument.Title, requestDocument.Array)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -70,7 +72,7 @@ func main() {
 		}
 
 		// else the document is saved and well hydrated
-		fmt.Printf(" Saved document : ", docSaved)
+		// fmt.Printf(" Saved document : ", docSaved)
 		c.JSON(200, gin.H{
 			"success": "true",
 		})
@@ -89,7 +91,7 @@ func main() {
 
 		// succesfull
 
-		fmt.Printf(" Saved document : ", result)
+		// fmt.Printf(" Saved document : ", result)
 		c.JSON(200, gin.H{
 			"docArray": result,
 		})
@@ -102,13 +104,13 @@ func main() {
 		title := c.Query("title")
 
 		doc, err := docService.GetDocumentByTitle(context.Background(), title)
-		fmt.Println(" Doc : ", doc)
+		// fmt.Println(" Doc : ", doc)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		fmt.Printf(" returning document : ", doc)
+		// fmt.Printf(" returning document : ", doc)
 		c.JSON(200, gin.H{
 			"data": doc,
 		})
@@ -133,9 +135,9 @@ func main() {
 			return
 		}
 
-		fmt.Println("title : ", ReqBody.DocTitle)
-		fmt.Println(" parrentnode :  ", ReqBody.ParentNode)
-		fmt.Println(" stringArr : ", ReqBody.StringArr)
+		// fmt.Println("title : ", ReqBody.DocTitle)
+		// fmt.Println(" parrentnode :  ", ReqBody.ParentNode)
+		// fmt.Println(" stringArr : ", ReqBody.StringArr)
 
 		err := docService.AddVersionToDocument(context.Background(), ReqBody.DocTitle, ReqBody.ParentNode, ReqBody.StringArr)
 
@@ -145,7 +147,7 @@ func main() {
 		}
 
 		// else the document is saved and well hydrated
-		fmt.Printf(" Saved version : ")
+		// fmt.Printf(" Saved version : ")
 		c.JSON(200, gin.H{
 			"success": "true",
 		})
@@ -195,5 +197,14 @@ func main() {
 
 	})
 
-	router.Run(":4000")
+	err = godotenv.Load(".env")
+
+	if err != nil {
+		fmt.Println("Error : ", err)
+		panic(err)
+	}
+
+	port := os.Getenv("PORT")
+
+	router.Run(fmt.Sprint(":", port))
 }

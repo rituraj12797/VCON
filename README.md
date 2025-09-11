@@ -258,7 +258,7 @@ The main entry point for the project is in `cmd/main.go`. This file is currently
 3.  Measures the total memory footprint of the resulting tree structure.
 4.  Retrieves a version from the tree and measures the access time.
 
-To run the benchmark, execute the following command from the root directory:
+To run thr server execute the following command from the root directory:
 ```bash
 go run cmd/main.go
 ```

@@ -29,26 +29,26 @@ func Hasher(lines []string) []string {
 	// we find the number of cpu cores and create that much number of worker go rouines to achieve true parallelism
 	numWorkers := runtime.NumCPU()
 
-	// job channel to allow go routines to take work from it 
+	// job channel to allow go routines to take work from it
 	jobs := make(chan job, numLines)
 	// result go routine to alow workers to deposit their results here
 	results := make(chan result, numLines)
 
-	// start the go routines and be assured they wont run untill somethign is nto in the channel 
+	// start the go routines and be assured they wont run untill somethign is nto in the channel
 	for w := 0; w < numWorkers; w++ {
 		go worker(jobs, results)
 	}
 
-	// put work in job channel and workers will pick them up and execute parallely 
+	// put work in job channel and workers will pick them up and execute parallely
 	for i, line := range lines {
 		jobs <- job{index: i, text: line}
 	}
 
-	// work distributio done so close the channel to avoid any king of dead lock 
+	// work distributio done so close the channel to avoid any king of dead lock
 	close(jobs)
 
 	// collect the result from the result chanel where go routines are depositing their completed work
-	
+
 	// result arrat of same size to show hashes of statement at corrosponding indices
 	hashes := make([]string, numLines)
 	for i := 0; i < numLines; i++ {
@@ -61,14 +61,14 @@ func Hasher(lines []string) []string {
 
 // it reads from the jobs channel performs the hashing and writes to the results channel.
 func worker(jobs <-chan job, results chan<- result) {
-	// will terminate  once go routine becomes empty as the channel is blocked now 
+	// will terminate  once go routine becomes empty as the channel is blocked now
 	for j := range jobs {
 
 		h := sha256.New()
 		h.Write([]byte(j.text))
 		hash := hex.EncodeToString(h.Sum(nil))
 
-		// send the result 
+		// send the result
 		results <- result{index: j.index, hash: hash}
 	}
 }
