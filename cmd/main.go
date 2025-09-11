@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 	"vcon/internal/db"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 type pureDocument struct {
@@ -195,5 +197,14 @@ func main() {
 
 	})
 
-	router.Run(":8080")
+	err = godotenv.Load(".env")
+
+	if err != nil {
+		fmt.Println("Error : ", err)
+		panic(err)
+	}
+
+	port := os.Getenv("PORT")
+
+	router.Run(fmt.Sprint(":", port))
 }
