@@ -102,7 +102,7 @@ func main() {
 		title := c.Query("title")
 
 		doc, err := docService.GetDocumentByTitle(context.Background(), title)
-		fmt.Println(" Doc : ", doc)
+		// fmt.Println(" Doc : ", doc)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -133,9 +133,9 @@ func main() {
 			return
 		}
 
-		fmt.Println("title : ", ReqBody.DocTitle)
-		fmt.Println(" parrentnode :  ", ReqBody.ParentNode)
-		fmt.Println(" stringArr : ", ReqBody.StringArr)
+		// fmt.Println("title : ", ReqBody.DocTitle)
+		// fmt.Println(" parrentnode :  ", ReqBody.ParentNode)
+		// fmt.Println(" stringArr : ", ReqBody.StringArr)
 
 		err := docService.AddVersionToDocument(context.Background(), ReqBody.DocTitle, ReqBody.ParentNode, ReqBody.StringArr)
 

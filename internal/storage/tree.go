@@ -11,13 +11,9 @@ type Tree struct {
 	versionMap *treemap.Map // version vs node number
 }
 
-
-
-
 // ONE thign to note is that the DB wont store the childArray in DB to save space
-//  But while building the tree here in RAM we will store the child array as it will be used t o iterate through our path in get version X 
+//  But while building the tree here in RAM we will store the child array as it will be used t o iterate through our path in get version X
 
-// 
 func NewTree() *Tree { // returns a reference to a new tree
 	var newtre Tree
 	newtre.tree = append(newtre.tree, Node{}) // empty node this will be the 0th node we are doing 1 based indexing so root will be 1st index hence starter is 0th node to avoid any confusion
@@ -94,11 +90,11 @@ func (t *Tree) AddNode(parentNode int, nodeNumber int, nodeVersion string, child
 	t.tree[nodeNumber] = childNode
 	t.tree[parentNode].childNodes = append(t.tree[parentNode].childNodes, nodeNumber)
 
-	fmt.Println(" Child Added to Parrent in tree ")
-	fmt.Println(" Parent : ", parentNode, " Child list : ", parent.childNodes)
-	fmt.Println(" ======= CHILDREN ======= ")
-	fmt.Println(childNode)
-	fmt.Println("========================= ")
+	// fmt.Println(" Child Added to Parrent in tree ")
+	// fmt.Println(" Parent : ", parentNode, " Child list : ", parent.childNodes)
+	// fmt.Println(" ======= CHILDREN ======= ")
+	// fmt.Println(childNode)
+	// fmt.Println("========================= ")
 
 	return nil
 }
@@ -138,24 +134,24 @@ func (t *Tree) GetVersionX(version string) {
 		j = t.tree[j].parentNumber
 	}
 
-	fmt.Println(" nodeNum : ", nodeNum)
-	fmt.Println(" lsa : ", lsa)
+	// fmt.Println(" nodeNum : ", nodeNum)
+	// fmt.Println(" lsa : ", lsa)
 
-	fmt.Println(" path : ", path)
-	fmt.Println("=============")
+	// fmt.Println(" path : ", path)
+	// fmt.Println("=============")
 
-	// path reversal 
+	// path reversal
 	for i, j := 0, len(path)-1; i < j; i, j = i+1, j-1 {
-    path[i], path[j] = path[j], path[i]
-}
+		path[i], path[j] = path[j], path[i]
+	}
 
-	var data string;
-	
-	for j := 0; j< len(path); j++ {
+	var data string
+
+	for j := 0; j < len(path); j++ {
 		data += t.tree[path[j]].data.(string)
 	}
-	
-	fmt.Println(" The Data is : ",data);
+
+	// fmt.Println(" The Data is : ",data);
 
 	// if path length = 1 means this node it self is the LSA
 	// if path length > 1 means someone else ( one etreme is lsa and other exreme is the nodeNum )

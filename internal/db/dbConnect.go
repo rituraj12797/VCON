@@ -23,7 +23,7 @@ func DBConnect() (*mongo.Database, error) {
 
 	mongouri := os.Getenv("MONGO_URI")
 
-	fmt.Println(" this is our mongo connection url : ", mongouri)
+	// fmt.Println(" this is our mongo connection url : ", mongouri)
 
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 

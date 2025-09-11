@@ -299,7 +299,7 @@ func (t *DocumentService) GetDocumentByTitle(ctx context.Context, title string) 
 	fmt.Println("fouhd : ",true,"   doc : ",doc)
 	// if not found do FetchDocumentFromDataBaseAndSetGlobalStore and store document in globalStor
 	if found == false || (found == true && doc == nil)  { // second means it is there in globalstore but nil only titles have been fetced )
-		fmt.Println(" not foud in kv store noe fetching DB")
+		// fmt.Println(" not foud in kv store noe fetching DB")
 		// try to fetch from Db and hydrate the global store now
 		ner := t.FetchDocumentFromDataBaseAndSetGlobalStore(ctx, title)
 
@@ -310,7 +310,7 @@ func (t *DocumentService) GetDocumentByTitle(ctx context.Context, title string) 
 
 	// now by here it is surely inside the globalStorage
 	doc, _ = t.globalStore.GetDocumentByTitle(title)
-	fmt.Println("title : ", title, " doc : ", doc)
+	// fmt.Println("title : ", title, " doc : ", doc)
 	// set current Document
 	t.globalStore.ChangeCurrent(doc)
 
@@ -425,7 +425,7 @@ func (t *DocumentService) FetchDocumentFromDataBaseAndSetGlobalStore(ctx context
 	}
 
 	// document fetched soccesfully
-	fmt.Println(" fetched fromo DB : ", doc)
+	// fmt.Println(" fetched fromo DB : ", doc)
 	// hydrated the store
 	t.globalStore.InsertNewDocument(title, doc)
 
@@ -472,12 +472,12 @@ func (t *DocumentService) FetchDocumentFromDataBaseAndSetGlobalStore(ctx context
 		return err
 	}
 
-	fmt.Println(" ====== DEBUG ====== ")
-	fmt.Println(" Size of resultArr : ", len(resultArr), " size of HashArray : ", len(hashArr))
+	// fmt.Println(" ====== DEBUG ====== ")
+	// fmt.Println(" Size of resultArr : ", len(resultArr), " size of HashArray : ", len(hashArr))
 	// we got result aray hydrate the global store now
 	for _, contentString := range resultArr {
 		t.globalStore.InternContentString(contentString.Hash, contentString.Content) // pased hash , content
-		fmt.Println("hash : ", contentString.Hash, " content : ", contentString.Content)
+		// fmt.Println("hash : ", contentString.Hash, " content : ", contentString.Content)
 	}
 
 	// find all hashes whihc are used in this

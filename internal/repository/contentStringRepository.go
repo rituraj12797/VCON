@@ -63,7 +63,7 @@ func (r *ContentStringRepository) BulkReader(ctx context.Context, hashArray []st
 
 	cursor, err := r.collection.Find(ctx, bson.M{"hash": bson.M{"$in": hashArray}})
 
-	fmt.Println(" caled Bulkreader ")
+	// fmt.Println(" caled Bulkreader ")
 
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (r *ContentStringRepository) BulkReader(ctx context.Context, hashArray []st
 	// after fetching the result the cleanup of this cursor is required as the cursor mkes the DataBase server hold result and thereby hold resources in a stateful manner
 
 	defer cursor.Close(ctx)
-	fmt.Println(" ======= ARARAR ==========")
+	// fmt.Println(" ======= ARARAR ==========")
 	var result []schema.ContentString
 
 	// fetch all the stored result and store in result array
