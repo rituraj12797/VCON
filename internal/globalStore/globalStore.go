@@ -84,7 +84,7 @@ func (t *Store) GetStringFromIdentifier(identifier string) (string, error) {
 	t.mutex.RUnlock()
 
 	if !exist {
-		return "", fmt.Errorf("identifier %d not found in store", identifier)
+		return "", fmt.Errorf("identifier %s not found in store", identifier)
 	}
 
 	return value.(string), nil
@@ -141,7 +141,7 @@ func (t *Store) GetCurrentDoc() (*schema.Document, error) {
 func (t *Store) GetDocumentByTitle(title string) (*schema.Document, bool) {
 	t.mutex.RLock()
 	defer t.mutex.RUnlock()
-	
+
 	doc, found := t.TitleToDocument.Get(title)
 	if !found {
 		return nil, false
