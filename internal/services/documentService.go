@@ -296,7 +296,7 @@ func (t *DocumentService) GetDocumentByTitle(ctx context.Context, title string) 
 
 	doc, found := t.globalStore.GetDocumentByTitle(title)
 
-	fmt.Println("fouhd : ",true,"   doc : ",doc)
+	// fmt.Println("fouhd : ",true,"   doc : ",doc)
 	// if not found do FetchDocumentFromDataBaseAndSetGlobalStore and store document in globalStor
 	if found == false || (found == true && doc == nil)  { // second means it is there in globalstore but nil only titles have been fetced )
 		// fmt.Println(" not foud in kv store noe fetching DB")

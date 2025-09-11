@@ -64,7 +64,7 @@ func main() {
 
 		// else we have the document from the frontn d
 
-		docSaved, err := docService.AddDocument(context.Background(), requestDocument.Title, requestDocument.Array)
+		_, err := docService.AddDocument(context.Background(), requestDocument.Title, requestDocument.Array)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -72,7 +72,7 @@ func main() {
 		}
 
 		// else the document is saved and well hydrated
-		fmt.Printf(" Saved document : ", docSaved)
+		// fmt.Printf(" Saved document : ", docSaved)
 		c.JSON(200, gin.H{
 			"success": "true",
 		})
@@ -91,7 +91,7 @@ func main() {
 
 		// succesfull
 
-		fmt.Printf(" Saved document : ", result)
+		// fmt.Printf(" Saved document : ", result)
 		c.JSON(200, gin.H{
 			"docArray": result,
 		})
@@ -110,7 +110,7 @@ func main() {
 			return
 		}
 
-		fmt.Printf(" returning document : ", doc)
+		// fmt.Printf(" returning document : ", doc)
 		c.JSON(200, gin.H{
 			"data": doc,
 		})
@@ -147,7 +147,7 @@ func main() {
 		}
 
 		// else the document is saved and well hydrated
-		fmt.Printf(" Saved version : ")
+		// fmt.Printf(" Saved version : ")
 		c.JSON(200, gin.H{
 			"success": "true",
 		})
